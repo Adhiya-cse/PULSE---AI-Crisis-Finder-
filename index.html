@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pulse – Crisis Resource Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden}
+  :root{
+    --paper:#FAF6ED;--paper-deep:#F1E9D6;--surface:#FFFFFF;--surface-2:#FCFAF4;
+    --ink:#20261F;--ink-soft:#5B6459;--ink-faint:#8D9587;
+    --teal:#12403A;--teal-soft:#1F5C52;--teal-pale:#E4EEEC;
+    --marigold:#DB8B2B;--marigold-soft:#F0AC53;--marigold-pale:#FBEDD8;
+    --terracotta:#B04430;--terracotta-soft:#C96248;--terracotta-pale:#F6E1DA;
+    --indigo:#3D4F8C;--indigo-pale:#E5E8F4;
+    --plum:#6E4A72;--plum-pale:#EEE3EE;
+    --rose:#AD4F6C;--rose-pale:#F5E2E8;
+    --line:#E4DBC5;--line-soft:#ECE5D3;
+    --shadow:0 1px 2px rgba(32,38,31,.04),0 8px 24px -12px rgba(32,38,31,.12);
+    --radius:14px;
+  }
+  h1,h2,h3,.display{font-family:'Fraunces',serif}
+  .app{display:flex;flex-direction:column;min-height:100vh}
+
+  /* NAV */
+  nav{background:rgba(250,246,237,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:0 1.75rem;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:1.2rem;color:var(--teal);font-family:'Fraunces',serif}
+  .logo svg{width:26px;height:20px}
+  .nav-links{display:flex;gap:2px;align-items:center}
+  .nav-btn{background:none;border:none;color:var(--ink-soft);padding:8px 14px;cursor:pointer;font-size:0.85rem;font-weight:500;border-radius:8px;transition:all .2s;font-family:'Inter',sans-serif}
+  .nav-btn:hover{color:var(--ink);background:var(--paper-deep)}
+  .nav-btn.active{color:var(--teal);background:var(--teal-pale)}
+  .nav-right{display:flex;align-items:center;gap:8px}
+  .icon-btn{width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+  .icon-btn:hover{border-color:var(--teal-soft);color:var(--teal)}
+  .emergency-btn{background:var(--terracotta);color:#fff;border:none;padding:9px 18px;border-radius:9px;font-size:0.83rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:'Inter',sans-serif;transition:all .2s}
+  .emergency-btn:hover{background:#963823}
+  .page{display:none;flex:1}
+  .page.active{display:block}
+
+  /* LANDING / HERO */
+  .hero{padding:5rem 2rem 2.5rem;text-align:center;max-width:760px;margin:0 auto;position:relative}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--marigold-pale);border:1px solid rgba(219,139,43,.35);border-radius:20px;padding:6px 16px;font-size:0.78rem;color:#8A5A17;font-weight:600;margin-bottom:1.75rem;letter-spacing:.01em}
+  .hero h1{font-size:clamp(2.1rem,5vw,3.4rem);font-weight:600;line-height:1.18;margin-bottom:1.1rem;letter-spacing:-0.01em;color:var(--ink)}
+  .hero h1 em{color:var(--teal-soft);font-style:italic;font-weight:500}
+  .hero p{color:var(--ink-soft);font-size:1.05rem;line-height:1.7;max-width:540px;margin:0 auto 2rem}
+  .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem}
+  .btn-primary{background:var(--teal);color:#fff;border:none;padding:13px 28px;border-radius:10px;font-size:0.92rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
+  .btn-primary:hover{background:var(--teal-soft);transform:translateY(-1px)}
+  .btn-secondary{background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:13px 28px;border-radius:10px;font-size:0.92rem;font-weight:500;cursor:pointer;transition:all .2s}
+  .btn-secondary:hover{background:var(--paper-deep);border-color:var(--ink-faint)}
+
+  /* pulse signature line */
+  .pulse-line{width:100%;max-width:560px;height:52px;margin:0 auto}
+  .pulse-line path{fill:none;stroke:var(--terracotta);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:600;stroke-dashoffset:600;animation:draw 2.6s ease-out forwards, pulseglow 2.4s ease-in-out 2.6s infinite}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes pulseglow{0%,100%{opacity:.55}50%{opacity:1}}
+  @media (prefers-reduced-motion:reduce){.pulse-line path{animation:none;stroke-dashoffset:0}}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;max-width:900px;margin:0 auto 3rem;padding:0 2rem;max-width:920px}
+  .stat-card{background:var(--surface);padding:1.4rem 1.2rem;text-align:center}
+  .stat-num{font-family:'Fraunces',serif;font-size:1.7rem;font-weight:600;color:var(--teal);margin-bottom:4px}
+  .stat-label{font-size:0.78rem;color:var(--ink-faint)}
+
+  .section-title{text-align:center;padding:2.5rem 2rem 0.4rem;color:var(--ink);font-size:1.35rem;font-weight:600;font-family:'Fraunces',serif}
+  .section-sub{text-align:center;color:var(--ink-faint);font-size:0.85rem;margin-bottom:1.75rem}
+
+  .how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;max-width:920px;margin:0 auto 1rem}
+  .how-step{background:var(--surface);padding:1.4rem 1.3rem}
+  .step-eyebrow{font-size:0.7rem;color:var(--marigold);font-weight:700;letter-spacing:.08em;margin-bottom:.6rem}
+  .how-step h3{font-size:0.95rem;margin:0 0 0.35rem;font-weight:600;color:var(--ink)}
+  .how-step p{font-size:0.82rem;color:var(--ink-soft);line-height:1.5}
+
+  .crisis-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;padding:0 2rem 1rem;max-width:1000px;margin:0 auto}
+  .crisis-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 0.8rem;text-align:center;cursor:pointer;transition:all .22s}
+  .crisis-card:hover{border-color:var(--terracotta);transform:translateY(-3px);box-shadow:var(--shadow)}
+  .crisis-icon{font-size:1.6rem;margin-bottom:8px}
+  .crisis-name{font-size:0.8rem;color:var(--ink-soft);font-weight:500}
+
+  /* AI CHAT */
+  .chat-layout{display:flex;height:calc(100vh - 64px)}
+  .chat-sidebar{width:280px;background:var(--surface-2);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+  .sidebar-head{padding:1.1rem;border-bottom:1px solid var(--line)}
+  .sidebar-head h3{font-size:0.85rem;font-weight:600;margin-bottom:8px;color:var(--ink)}
+  .lang-select{width:100%;background:var(--surface);border:1px solid var(--line);color:var(--ink);padding:8px 10px;border-radius:8px;font-size:0.85rem;cursor:pointer;font-family:'Inter',sans-serif}
+  .prompts-list{padding:0.85rem;overflow-y:auto;flex:1}
+  .prompts-eyebrow{font-size:0.72rem;color:var(--ink-faint);padding:4px 2px 8px;font-weight:700;letter-spacing:.06em}
+  .prompt-item{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:7px;font-size:0.78rem;color:var(--ink-soft);cursor:pointer;transition:all .2s;line-height:1.4}
+  .prompt-item:hover{border-color:var(--teal-soft);color:var(--ink);background:var(--teal-pale)}
+  .chat-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--paper)}
+  .chat-messages{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1rem}
+  .msg{max-width:80%;animation:fadeIn .35s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .msg.user{align-self:flex-end}
+  .msg.assistant{align-self:flex-start;width:100%;max-width:100%}
+  .msg-bubble{padding:11px 15px;border-radius:14px;font-size:0.9rem;line-height:1.6}
+  .msg.user .msg-bubble{background:var(--teal);color:#fff;border-radius:14px 14px 3px 14px}
+  .msg.assistant .msg-bubble{background:transparent;padding:0}
+  .response-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.3rem;width:100%;box-shadow:var(--shadow)}
+  .rc-header{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding-bottom:0.8rem;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+  .rc-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;font-size:0.78rem;font-weight:600}
+  .badge-health{background:var(--teal-pale);color:var(--teal)}
+  .badge-food{background:var(--marigold-pale);color:#8A5A17}
+  .badge-employ{background:var(--indigo-pale);color:var(--indigo)}
+  .badge-housing{background:var(--plum-pale);color:var(--plum)}
+  .badge-legal{background:var(--terracotta-pale);color:var(--terracotta)}
+  .badge-women{background:var(--rose-pale);color:var(--rose)}
+  .badge-general{background:var(--line-soft);color:var(--ink-soft)}
+  .urgency-high{color:var(--terracotta);font-size:0.78rem;font-weight:700}
+  .urgency-medium{color:#8A5A17;font-size:0.78rem;font-weight:700}
+  .urgency-low{color:var(--teal-soft);font-size:0.78rem;font-weight:700}
+  .rc-sections{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0.2rem}
+  .rc-section{background:var(--surface-2);border:1px solid var(--line-soft);border-radius:10px;padding:0.85rem}
+  .rc-section h4{font-size:0.72rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:700}
+  .rc-section ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+  .rc-section li{font-size:0.82rem;color:var(--ink-soft);padding:5px 9px;background:var(--surface);border:1px solid var(--line-soft);border-radius:6px;display:flex;align-items:center;gap:7px}
+  .rc-section li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--terracotta);flex-shrink:0}
+  .rc-section.full{grid-column:1/-1}
+  .action-steps{list-style:none;display:flex;flex-direction:column;gap:7px}
+  .action-step{display:flex;align-items:flex-start;gap:10px;font-size:0.85rem;color:var(--ink)}
+  .step-circle{min-width:22px;height:22px;border-radius:50%;background:var(--teal);color:#fff;font-size:0.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
+  .rc-contacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+  .contact-pill{background:var(--surface);border:1px solid var(--line-soft);border-radius:20px;padding:5px 12px;font-size:0.78rem;color:var(--ink-soft)}
+  .contact-pill strong{color:var(--ink)}
+  .chat-input-area{padding:1rem 1.5rem;border-top:1px solid var(--line);background:var(--surface-2)}
+  .chat-input-row{display:flex;gap:8px;align-items:flex-end}
+  .chat-input{flex:1;background:var(--surface);border:1px solid var(--line);color:var(--ink);padding:11px 14px;border-radius:10px;font-size:0.9rem;resize:none;min-height:46px;max-height:120px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
+  .chat-input:focus{border-color:var(--teal-soft)}
+  .chat-send{background:var(--teal);color:#fff;border:none;padding:11px 18px;border-radius:10px;cursor:pointer;font-size:0.9rem;font-weight:600;transition:all .2s;white-space:nowrap;font-family:'Inter',sans-serif}
+  .chat-send:hover{background:var(--teal-soft)}
+  .chat-send:disabled{background:var(--ink-faint);cursor:not-allowed}
+  .typing-ind{display:flex;gap:4px;align-items:center;padding:8px 0}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-faint);animation:bounce .8s infinite}
+  .dot:nth-child(2){animation-delay:.2s}
+  .dot:nth-child(3){animation-delay:.4s}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .thinking-msg{font-size:0.82rem;color:var(--ink-faint);font-style:italic;padding:6px 0}
+  .rc-summary{font-size:0.88rem;color:var(--ink);line-height:1.6;margin-bottom:1rem;padding:0.8rem 0.9rem;background:var(--teal-pale);border-radius:8px;border-left:3px solid var(--teal)}
+  .key-notice{font-size:0.72rem;color:var(--ink-faint);padding:8px 1.5rem 0;text-align:center}
+  .key-notice button{background:none;border:none;color:var(--teal-soft);text-decoration:underline;cursor:pointer;font-size:0.72rem;font-family:'Inter',sans-serif}
+
+  /* RESOURCES */
+  .resources-page{padding:1.75rem 2rem}
+  .resources-page h2{font-family:'Fraunces',serif;font-weight:600}
+  .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin:1.2rem 0 1.5rem}
+  .filter-select{background:var(--surface);border:1px solid var(--line);color:var(--ink);padding:9px 12px;border-radius:9px;font-size:0.85rem;cursor:pointer;min-width:140px;font-family:'Inter',sans-serif}
+  .res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .res-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.25rem;transition:box-shadow .2s}
+  .res-card:hover{box-shadow:var(--shadow)}
+  .res-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px}
+  .res-title{font-size:0.95rem;font-weight:600;color:var(--ink)}
+  .res-cat{font-size:0.72rem;padding:3px 9px;border-radius:12px;font-weight:700;white-space:nowrap}
+  .res-desc{font-size:0.83rem;color:var(--ink-soft);line-height:1.5;margin-bottom:10px}
+  .res-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .res-tag{font-size:0.74rem;background:var(--surface-2);border:1px solid var(--line-soft);color:var(--ink-faint);padding:4px 9px;border-radius:6px}
+  .res-actions{display:flex;gap:8px}
+  .res-btn{flex:1;padding:8px;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);transition:all .2s;font-family:'Inter',sans-serif}
+  .res-btn.primary{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .res-btn:hover{opacity:.85}
+
+  /* MAP */
+  .map-page{padding:1.75rem 2rem}
+  .map-page h2{font-family:'Fraunces',serif;font-weight:600;margin-bottom:1rem}
+  .map-container{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:2.2rem;text-align:center;min-height:400px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .map-bg{position:absolute;inset:0;opacity:.5;background-image:radial-gradient(circle,#DDD3B7 1px,transparent 1px);background-size:26px 26px}
+  .map-pins{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:1.5rem;width:100%}
+  .map-pin{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:0.85rem;text-align:left;cursor:pointer;transition:all .2s}
+  .map-pin:hover{border-color:var(--teal-soft);transform:translateY(-2px)}
+  .pin-name{font-size:0.82rem;font-weight:600;margin-bottom:2px;color:var(--ink)}
+  .pin-type{font-size:0.72rem;color:var(--ink-faint)}
+  .pin-dist{font-size:0.72rem;color:var(--teal-soft);font-weight:600}
+  .map-legend{margin-top:1rem;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1rem}
+  .map-legend span{font-size:0.82rem;color:var(--ink-soft)}
+
+  /* EMERGENCY */
+  .emergency-page{padding:2.2rem 2rem}
+  .emg-hero{text-align:center;padding:0.5rem 0 2rem}
+  .emg-hero h2{font-size:1.6rem;font-weight:600;margin-bottom:0.5rem;font-family:'Fraunces',serif}
+  .emg-hero p{color:var(--ink-soft);font-size:0.9rem}
+  .emg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;max-width:920px;margin:0 auto}
+  .emg-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.5rem;text-align:center}
+  .emg-icon{font-size:2rem;margin-bottom:10px}
+  .emg-title{font-size:0.9rem;font-weight:700;margin-bottom:4px;color:var(--ink)}
+  .emg-num{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;color:var(--terracotta);margin-bottom:12px}
+  .emg-btn{display:block;width:100%;background:var(--terracotta);color:#fff;border:none;padding:11px;border-radius:9px;font-size:0.85rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;font-family:'Inter',sans-serif}
+  .emg-btn:hover{background:#963823}
+  .emg-btn.teal{background:var(--teal)}
+  .emg-btn.teal:hover{background:var(--teal-soft)}
+  .emg-btn.plum{background:var(--plum)}
+  .emg-btn.plum:hover{background:#5a3c5e}
+
+  /* ADMIN */
+  .admin-page{padding:1.75rem 2rem}
+  .admin-login{max-width:380px;margin:3rem auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:2.2rem;box-shadow:var(--shadow)}
+  .admin-login h2{margin-bottom:1.5rem;font-size:1.15rem;font-weight:600;font-family:'Fraunces',serif}
+  .field{margin-bottom:1rem}
+  .field label{display:block;font-size:0.82rem;color:var(--ink-soft);margin-bottom:5px}
+  .field input{width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);padding:10px 12px;border-radius:8px;font-size:0.9rem;outline:none;font-family:'Inter',sans-serif}
+  .field input:focus{border-color:var(--teal-soft)}
+  .admin-dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem}
+  .adm-stat{background:var(--surface);padding:1.2rem}
+  .adm-stat-val{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;color:var(--teal)}
+  .adm-stat-lbl{font-size:0.78rem;color:var(--ink-soft);margin-top:3px}
+  .adm-table{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem}
+  .adm-table-head{padding:12px 14px;border-bottom:1px solid var(--line);font-size:0.88rem;font-weight:600;color:var(--ink)}
+  .adm-table table{width:100%;border-collapse:collapse;font-size:0.83rem}
+  .adm-table th{background:var(--surface-2);padding:10px 14px;text-align:left;color:var(--ink-soft);font-weight:600;font-size:0.76rem;text-transform:uppercase;letter-spacing:.03em}
+  .adm-table td{padding:10px 14px;border-top:1px solid var(--line-soft);color:var(--ink)}
+  .status-badge{padding:2px 9px;border-radius:12px;font-size:0.72rem;font-weight:600}
+  .status-active{background:var(--teal-pale);color:var(--teal)}
+  .status-pending{background:var(--marigold-pale);color:#8A5A17}
+
+  /* SETTINGS MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(32,38,31,.45);display:none;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+  .modal-overlay.active{display:flex}
+  .modal{background:var(--surface);border-radius:var(--radius);padding:1.75rem;max-width:420px;width:100%;box-shadow:0 24px 60px -12px rgba(0,0,0,.35)}
+  .modal h3{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:600;margin-bottom:.5rem}
+  .modal p{font-size:0.84rem;color:var(--ink-soft);line-height:1.55;margin-bottom:1rem}
+  .modal .field input{font-family:monospace;font-size:0.82rem}
+  .modal-actions{display:flex;gap:8px;margin-top:1.2rem}
+  .modal-actions button{flex:1}
+  .key-status{display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--ink-soft);margin-top:.6rem}
+  .key-dot{width:7px;height:7px;border-radius:50%;background:var(--ink-faint)}
+  .key-dot.set{background:var(--teal-soft)}
+
+  @media(max-width:700px){
+    .chat-layout{flex-direction:column}
+    .chat-sidebar{width:100%;height:auto;max-height:180px;border-right:none;border-bottom:1px solid var(--line)}
+    .rc-sections{grid-template-columns:1fr}
+    .nav-links{display:none}
+    .stats-grid{padding:0 1rem}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav>
+    <div class="logo">
+      <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg"><path d="M2 15 H16 L21 4 L27 26 L33 10 L38 20 L42 15 H58" stroke="#B04430" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Pulse
+    </div>
+    <div class="nav-links">
+      <button class="nav-btn active" onclick="showPage('landing')">Home</button>
+      <button class="nav-btn" onclick="showPage('chat')">AI Assistant</button>
+      <button class="nav-btn" onclick="showPage('resources')">Resources</button>
+      <button class="nav-btn" onclick="showPage('map')">Map</button>
+      <button class="nav-btn" onclick="showPage('admin')">Admin</button>
+    </div>
+    <div class="nav-right">
+      <button class="icon-btn" title="API settings" onclick="openSettings()">⚙️</button>
+      <button class="emergency-btn" onclick="showPage('emergency')">🚨 Emergency</button>
+    </div>
+  </nav>
+
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <h3>API Connection</h3>
+      <p>This app calls the Anthropic API directly from the browser. Inside Claude.ai, that call is authenticated automatically — you don't need to do anything here.</p>
+      <p>If you've exported this page to run on your own site, paste an API key below. It's kept only in this tab's memory (never saved to disk or localStorage), so it clears on refresh — fine for testing, not for a public deployment. For a real deployment, route this call through your own server instead so the key never reaches the browser.</p>
+      <div class="field">
+        <label>Anthropic API key (optional)</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-..."/>
+      </div>
+      <div class="key-status"><span class="key-dot" id="keyDot"></span><span id="keyStatusText">No key set — using automatic Claude.ai authentication</span></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
+        <button class="btn-primary" onclick="saveKey()">Save for this session</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LANDING PAGE -->
+  <div id="page-landing" class="page active">
+    <div class="hero">
+      <div class="hero-badge">🇮🇳 AI-powered · 7 languages · live government &amp; NGO data</div>
+      <h1>Instant help when<br><em>people need it most</em></h1>
+      <p>Describe your crisis in any language. Pulse finds matching government schemes, nearby NGOs, and a step-by-step action plan in under 30 seconds.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="showPage('chat')">Get help now →</button>
+        <button class="btn-secondary" onclick="showPage('resources')">Explore resources</button>
+      </div>
+      <svg class="pulse-line" viewBox="0 0 560 52" xmlns="http://www.w3.org/2000/svg"><path d="M0 26 H180 L200 6 L222 46 L244 18 L262 34 L278 26 H560"/></svg>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num">81 Cr+</div><div class="stat-label">Food beneficiaries</div></div>
+      <div class="stat-card"><div class="stat-num">11 Cr+</div><div class="stat-label">Housing beneficiaries</div></div>
+      <div class="stat-card"><div class="stat-num">1.5 Cr+</div><div class="stat-label">Monthly unemployment claims</div></div>
+      <div class="stat-card"><div class="stat-num">70%</div><div class="stat-label">Unaware of eligible schemes</div></div>
+    </div>
+    <div class="section-title">How it works</div>
+    <div class="section-sub">Four steps, from crisis to a concrete plan</div>
+    <div class="how-grid">
+      <div class="how-step"><div class="step-eyebrow">DESCRIBE</div><h3>Tell us what's happening</h3><p>Type or speak your situation in any Indian language</p></div>
+      <div class="how-step"><div class="step-eyebrow">UNDERSTAND</div><h3>AI reads the crisis</h3><p>Detects crisis type, urgency, and relevant location</p></div>
+      <div class="how-step"><div class="step-eyebrow">MATCH</div><h3>Resources surface</h3><p>Government schemes and nearby NGOs, ranked by fit</p></div>
+      <div class="how-step"><div class="step-eyebrow">ACT</div><h3>Get a clear plan</h3><p>Ordered steps, documents needed, and who to call</p></div>
+    </div>
+    <div class="section-title">Crisis categories</div>
+    <div class="section-sub">Tap a category for immediate, tailored help</div>
+    <div class="crisis-grid">
+      <div class="crisis-card" onclick="startCrisis('food')"><div class="crisis-icon">🍱</div><div class="crisis-name">Food assistance</div></div>
+      <div class="crisis-card" onclick="startCrisis('housing')"><div class="crisis-icon">🏠</div><div class="crisis-name">Housing support</div></div>
+      <div class="crisis-card" onclick="startCrisis('health')"><div class="crisis-icon">🏥</div><div class="crisis-name">Healthcare</div></div>
+      <div class="crisis-card" onclick="startCrisis('women')"><div class="crisis-icon">👩</div><div class="crisis-name">Women's safety</div></div>
+      <div class="crisis-card" onclick="startCrisis('child')"><div class="crisis-icon">👶</div><div class="crisis-name">Child protection</div></div>
+      <div class="crisis-card" onclick="startCrisis('employment')"><div class="crisis-icon">💼</div><div class="crisis-name">Employment</div></div>
+      <div class="crisis-card" onclick="startCrisis('legal')"><div class="crisis-icon">⚖️</div><div class="crisis-name">Legal aid</div></div>
+      <div class="crisis-card" onclick="startCrisis('disaster')"><div class="crisis-icon">🌊</div><div class="crisis-name">Disaster relief</div></div>
+      <div class="crisis-card" onclick="startCrisis('mental')"><div class="crisis-icon">🧠</div><div class="crisis-name">Mental health</div></div>
+    </div>
+    <div style="height:2rem"></div>
+  </div>
+
+  <!-- AI CHAT PAGE -->
+  <div id="page-chat" class="page">
+    <div class="chat-layout">
+      <div class="chat-sidebar">
+        <div class="sidebar-head">
+          <h3>🌐 Language</h3>
+          <select class="lang-select" id="langSelect">
+            <option value="English">English</option>
+            <option value="Hindi">हिन्दी (Hindi)</option>
+            <option value="Tamil">தமிழ் (Tamil)</option>
+            <option value="Telugu">తెలుగు (Telugu)</option>
+            <option value="Bengali">বাংলা (Bengali)</option>
+            <option value="Marathi">मराठी (Marathi)</option>
+            <option value="Kannada">ಕನ್ನಡ (Kannada)</option>
+          </select>
+        </div>
+        <div class="prompts-list">
+          <div class="prompts-eyebrow">SUGGESTED PROMPTS</div>
+          <div class="prompt-item" onclick="usePrompt(this)">I lost my job and don't have money for food</div>
+          <div class="prompt-item" onclick="usePrompt(this)">My father is hospitalized and we can't afford treatment</div>
+          <div class="prompt-item" onclick="usePrompt(this)">I am a widow with two children and no income</div>
+          <div class="prompt-item" onclick="usePrompt(this)">We lost our home in the floods last week</div>
+          <div class="prompt-item" onclick="usePrompt(this)">I am a farmer who cannot repay my loans</div>
+          <div class="prompt-item" onclick="usePrompt(this)">My husband is abusive and I need help</div>
+          <div class="prompt-item" onclick="usePrompt(this)">I am a daily wage worker and haven't had work for a month</div>
+          <div class="prompt-item" onclick="usePrompt(this)">My child is malnourished and I can't afford food</div>
+        </div>
+      </div>
+      <div class="chat-main">
+        <div class="chat-messages" id="chatMessages">
+          <div class="msg assistant">
+            <div class="msg-bubble">
+              <div class="response-card">
+                <div class="rc-header">
+                  <span style="font-size:1.2rem">👋</span>
+                  <div>
+                    <div style="font-weight:600;font-size:0.95rem;font-family:'Fraunces',serif">Welcome to Pulse</div>
+                    <div style="font-size:0.8rem;color:var(--ink-soft)">AI crisis resource finder for India</div>
+                  </div>
+                </div>
+                <p style="font-size:0.88rem;color:var(--ink-soft);line-height:1.6">Describe your situation and I'll instantly find government schemes, nearby support centers, required documents, and a step-by-step action plan. Write in Hindi, Tamil, Telugu, Bengali, Marathi, Kannada, or English.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="key-notice" id="keyNotice" style="display:none">Using your session API key. <button onclick="openSettings()">Change</button></div>
+        <div class="chat-input-area">
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="chatInput" placeholder="Describe your crisis or situation..." rows="1" onkeydown="handleKey(event)"></textarea>
+            <button class="chat-send" id="sendBtn" onclick="sendMessage()">Send ↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESOURCES PAGE -->
+  <div id="page-resources" class="page">
+    <div class="resources-page">
+      <h2 style="font-size:1.3rem">Government schemes &amp; resources</h2>
+      <div class="filter-bar">
+        <select class="filter-select" onchange="filterResources()" id="filterState">
+          <option value="">All states</option>
+          <option>Tamil Nadu</option><option>Maharashtra</option><option>Delhi</option>
+          <option>Karnataka</option><option>West Bengal</option><option>Andhra Pradesh</option>
+          <option>Telangana</option><option>Uttar Pradesh</option>
+        </select>
+        <select class="filter-select" onchange="filterResources()" id="filterCat">
+          <option value="">All categories</option>
+          <option>Food</option><option>Health</option><option>Housing</option>
+          <option>Employment</option><option>Women</option><option>Legal</option><option>Child</option>
+        </select>
+        <select class="filter-select" onchange="filterResources()" id="filterUrgency">
+          <option value="">All urgency</option>
+          <option>High</option><option>Medium</option><option>Low</option>
+        </select>
+      </div>
+      <div class="res-grid" id="resGrid"></div>
+    </div>
+  </div>
+
+  <!-- MAP PAGE -->
+  <div id="page-map" class="page">
+    <div class="map-page">
+      <h2>Nearby support centers</h2>
+      <div class="map-container">
+        <div class="map-bg"></div>
+        <div style="position:relative;z-index:1">
+          <div style="font-size:2.5rem;margin-bottom:1rem">🗺️</div>
+          <div style="font-size:1.05rem;font-weight:600;margin-bottom:0.5rem;font-family:'Fraunces',serif">Resource map</div>
+          <div style="font-size:0.85rem;color:var(--ink-soft);margin-bottom:1.5rem">Showing nearby hospitals, NGOs, ration shops, and support centers</div>
+          <div class="map-pins" style="max-width:720px">
+            <div class="map-pin"><div style="font-size:1.2rem">🏥</div><div class="pin-name">Govt. Hospital</div><div class="pin-type">Healthcare</div><div class="pin-dist">1.2 km</div></div>
+            <div class="map-pin"><div style="font-size:1.2rem">🏪</div><div class="pin-name">PDS Ration Shop</div><div class="pin-type">Food</div><div class="pin-dist">0.8 km</div></div>
+            <div class="map-pin"><div style="font-size:1.2rem">🤝</div><div class="pin-name">CRY India NGO</div><div class="pin-type">Child/Women</div><div class="pin-dist">2.1 km</div></div>
+            <div class="map-pin"><div style="font-size:1.2rem">⚖️</div><div class="pin-name">Legal Aid Center</div><div class="pin-type">Legal</div><div class="pin-dist">3.0 km</div></div>
+            <div class="map-pin"><div style="font-size:1.2rem">💼</div><div class="pin-name">Employment Office</div><div class="pin-type">Jobs</div><div class="pin-dist">1.8 km</div></div>
+            <div class="map-pin"><div style="font-size:1.2rem">🏠</div><div class="pin-name">Women's Shelter</div><div class="pin-type">Shelter</div><div class="pin-dist">4.2 km</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="map-legend">
+        <span>🏥 Hospitals &nbsp; 🏪 Ration shops &nbsp; 🤝 NGOs &nbsp; ⚖️ Legal aid &nbsp; 💼 Employment &nbsp; 🏠 Shelters</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMERGENCY PAGE -->
+  <div id="page-emergency" class="page">
+    <div class="emergency-page">
+      <div class="emg-hero">
+        <h2>🚨 Emergency contacts</h2>
+        <p>One-touch access to emergency helplines across India</p>
+      </div>
+      <div class="emg-grid">
+        <div class="emg-card"><div class="emg-icon">🚔</div><div class="emg-title">Police</div><div class="emg-num">100</div><a href="tel:100" class="emg-btn">Call 100</a></div>
+        <div class="emg-card"><div class="emg-icon">🚑</div><div class="emg-title">Ambulance</div><div class="emg-num">108</div><a href="tel:108" class="emg-btn">Call 108</a></div>
+        <div class="emg-card"><div class="emg-icon">👩</div><div class="emg-title">Women helpline</div><div class="emg-num">181</div><a href="tel:181" class="emg-btn teal">Call 181</a></div>
+        <div class="emg-card"><div class="emg-icon">👶</div><div class="emg-title">Childline</div><div class="emg-num">1098</div><a href="tel:1098" class="emg-btn teal">Call 1098</a></div>
+        <div class="emg-card"><div class="emg-icon">🧠</div><div class="emg-title">Mental health</div><div class="emg-num">iCall</div><a href="tel:9152987821" class="emg-btn plum">Call iCall</a></div>
+        <div class="emg-card"><div class="emg-icon">🌊</div><div class="emg-title">Disaster response</div><div class="emg-num">1078</div><a href="tel:1078" class="emg-btn">Call 1078</a></div>
+        <div class="emg-card"><div class="emg-icon">🔥</div><div class="emg-title">Fire brigade</div><div class="emg-num">101</div><a href="tel:101" class="emg-btn">Call 101</a></div>
+        <div class="emg-card"><div class="emg-icon">⚖️</div><div class="emg-title">Senior citizen</div><div class="emg-num">14567</div><a href="tel:14567" class="emg-btn plum">Call 14567</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN PAGE -->
+  <div id="page-admin" class="page">
+    <div id="adminLogin" class="admin-login">
+      <h2>🔐 Admin login</h2>
+      <div class="field"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@pulse.gov.in" value="admin@pulse.gov.in"/></div>
+      <div class="field"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" value="admin123"/></div>
+      <button class="btn-primary" style="width:100%;margin-top:0.5rem" onclick="adminLogin()">Sign in</button>
+    </div>
+    <div id="adminDash" style="display:none;padding:0 2rem 2rem">
+      <h2 style="margin-bottom:1.5rem;font-size:1.2rem;font-weight:600;font-family:'Fraunces',serif">Dashboard analytics</h2>
+      <div class="admin-dashboard">
+        <div class="adm-stat"><div class="adm-stat-val">12,847</div><div class="adm-stat-lbl">Total users</div></div>
+        <div class="adm-stat"><div class="adm-stat-val">38,291</div><div class="adm-stat-lbl">Queries processed</div></div>
+        <div class="adm-stat"><div class="adm-stat-val">94.2%</div><div class="adm-stat-lbl">AI accuracy</div></div>
+        <div class="adm-stat"><div class="adm-stat-val">156</div><div class="adm-stat-lbl">Schemes listed</div></div>
+        <div class="adm-stat"><div class="adm-stat-val">2,341</div><div class="adm-stat-lbl">NGOs registered</div></div>
+        <div class="adm-stat"><div class="adm-stat-val">28s</div><div class="adm-stat-lbl">Avg response time</div></div>
+      </div>
+      <div class="adm-table">
+        <div class="adm-table-head">Recent queries</div>
+        <table>
+          <thead><tr><th>User</th><th>Crisis type</th><th>State</th><th>Status</th><th>Time</th></tr></thead>
+          <tbody>
+            <tr><td>Anonymous</td><td>Healthcare</td><td>Tamil Nadu</td><td><span class="status-badge status-active">Resolved</span></td><td>2m ago</td></tr>
+            <tr><td>Anonymous</td><td>Food</td><td>Maharashtra</td><td><span class="status-badge status-active">Resolved</span></td><td>5m ago</td></tr>
+            <tr><td>Anonymous</td><td>Employment</td><td>Delhi</td><td><span class="status-badge status-pending">Processing</span></td><td>8m ago</td></tr>
+            <tr><td>Anonymous</td><td>Women safety</td><td>Karnataka</td><td><span class="status-badge status-active">Resolved</span></td><td>12m ago</td></tr>
+            <tr><td>Anonymous</td><td>Housing</td><td>UP</td><td><span class="status-badge status-active">Resolved</span></td><td>15m ago</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SCHEMES_DB = {
+  food:[
+    {title:"PM Garib Kalyan Anna Yojana",desc:"Free food grain to 80 crore beneficiaries under National Food Security Act",eligibility:"BPL families with ration card",docs:["Ration Card","Aadhaar Card"],contact:"14445",state:"All India",urgency:"High"},
+    {title:"Mid-Day Meal Scheme",desc:"Free meals for school children in government and aided schools",eligibility:"Children enrolled in Class 1-8 in govt schools",docs:["School ID","Aadhaar"],contact:"011-23381696",state:"All India",urgency:"Medium"},
+    {title:"Antyodaya Anna Yojana",desc:"Highly subsidized foodgrain for poorest of the poor families",eligibility:"Poorest BPL households identified by states",docs:["AAY Ration Card","Income Certificate"],contact:"1800111311",state:"All India",urgency:"High"},
+  ],
+  health:[
+    {title:"Ayushman Bharat PM-JAY",desc:"Health insurance cover of ₹5 lakh per family per year for secondary and tertiary care",eligibility:"Bottom 40% of Indian population as per SECC data",docs:["Aadhaar","SECC ID or Ration Card"],contact:"14555",state:"All India",urgency:"High"},
+    {title:"Chief Minister's Comprehensive Health Insurance",desc:"₹5 lakh health cover for TN residents; covers 1,400+ procedures",eligibility:"TN residents with annual income < ₹72,000",docs:["Income Certificate","Aadhaar","Ration Card"],contact:"044-28592828",state:"Tamil Nadu",urgency:"High"},
+    {title:"ESIC Medical Benefits",desc:"Comprehensive medical care for insured workers and dependents",eligibility:"Workers earning < ₹21,000/month in covered establishments",docs:["ESIC Card","Employment proof"],contact:"1800112526",state:"All India",urgency:"Medium"},
+  ],
+  employment:[
+    {title:"MGNREGS (MNREGA)",desc:"100 days guaranteed wage employment per year to rural households",eligibility:"Any rural household willing to do unskilled manual work",docs:["Job Card","Aadhaar","Bank Account"],contact:"1800111555",state:"All India",urgency:"Medium"},
+    {title:"PM Kaushal Vikas Yojana",desc:"Free skill training and certification to help youth get employment",eligibility:"Indian nationals aged 15-45 years",docs:["Aadhaar","10th pass certificate","Photo"],contact:"18001239626",state:"All India",urgency:"Low"},
+    {title:"Pradhan Mantri Rojgar Protsahan Yojana",desc:"Government pays EPF contribution for new employees to incentivize hiring",eligibility:"New employees earning < ₹15,000/month registered in EPFO",docs:["Aadhaar","Bank Account","Employment proof"],contact:"18001800",state:"All India",urgency:"Low"},
+  ],
+  housing:[
+    {title:"Pradhan Mantri Awas Yojana (Urban)",desc:"Affordable housing for EWS/LIG/MIG urban families; subsidy up to ₹2.67 lakh",eligibility:"Urban households without pucca house; income < ₹18 lakh/year",docs:["Aadhaar","Income Certificate","Land documents"],contact:"1800116446",state:"All India",urgency:"Medium"},
+    {title:"Pradhan Mantri Awas Yojana (Rural)",desc:"Financial assistance for construction of pucca houses in rural areas",eligibility:"Homeless or kachha house BPL rural households per SECC",docs:["Aadhaar","Bank Account","SECC data"],contact:"1800116446",state:"All India",urgency:"High"},
+  ],
+  women:[
+    {title:"Beti Bachao Beti Padhao",desc:"Scheme to address declining child sex ratio and promotion of girl education",eligibility:"Girls from birth to 18 years in select districts",docs:["Birth Certificate","Aadhaar"],contact:"011-23381611",state:"All India",urgency:"Low"},
+    {title:"One Stop Centre Scheme",desc:"Integrated support to women affected by violence including emergency support",eligibility:"Any woman affected by violence",docs:["No documents needed for emergency help"],contact:"181",state:"All India",urgency:"High"},
+    {title:"PM Matru Vandana Yojana",desc:"Maternity benefit of ₹6,000 to pregnant and lactating women",eligibility:"Pregnant women for first live birth; aged 19+",docs:["MCP Card","Aadhaar","Bank Account"],contact:"1800111565",state:"All India",urgency:"Medium"},
+  ],
+  legal:[
+    {title:"NALSA Legal Aid",desc:"Free legal services to eligible persons through Legal Services Authority",eligibility:"Women, SC/ST, disabled, children, victims of trafficking, BPL",docs:["Income Certificate or BPL Card","Aadhaar"],contact:"15100",state:"All India",urgency:"Medium"},
+    {title:"State Legal Services Authority",desc:"State-level free legal aid, lok adalats, and awareness programs",eligibility:"All underprivileged citizens",docs:["ID proof","Case documents"],contact:"Varies by state",state:"All India",urgency:"Medium"},
+  ],
+  disaster:[
+    {title:"PM National Relief Fund",desc:"Immediate relief to families affected by natural calamities and disasters",eligibility:"Victims of floods, earthquakes, cyclones, and other disasters",docs:["Disaster certificate from district authority","Aadhaar"],contact:"011-23388576",state:"All India",urgency:"High"},
+    {title:"State Disaster Relief Fund",desc:"State-level compensation for crop loss, house damage, and death due to disasters",eligibility:"Disaster-affected residents of the state",docs:["Revenue official certificate","Aadhaar","Bank Account"],contact:"Varies by state",state:"All India",urgency:"High"},
+  ],
+};
+
+const catColors = {
+  food:{cls:'badge-food',label:'Food'},health:{cls:'badge-health',label:'Health'},
+  employ:{cls:'badge-employ',label:'Employment'},employment:{cls:'badge-employ',label:'Employment'},
+  housing:{cls:'badge-housing',label:'Housing'},women:{cls:'badge-women',label:'Women'},
+  legal:{cls:'badge-legal',label:'Legal'},disaster:{cls:'badge-general',label:'Disaster'},
+  mental:{cls:'badge-health',label:'Mental Health'},child:{cls:'badge-general',label:'Child'},
+  general:{cls:'badge-general',label:'General'}
+};
+
+let allSchemes = [];
+Object.entries(SCHEMES_DB).forEach(([cat,items]) => items.forEach(s => allSchemes.push({...s,cat})));
+
+// ---- Optional session-only API key (never persisted; cleared on refresh) ----
+let sessionApiKey = "";
+function openSettings(){
+  document.getElementById('apiKeyInput').value = sessionApiKey;
+  updateKeyStatus();
+  document.getElementById('settingsModal').classList.add('active');
+}
+function closeSettings(){ document.getElementById('settingsModal').classList.remove('active'); }
+function saveKey(){
+  sessionApiKey = document.getElementById('apiKeyInput').value.trim();
+  updateKeyStatus();
+  document.getElementById('keyNotice').style.display = sessionApiKey ? 'block' : 'none';
+  closeSettings();
+}
+function updateKeyStatus(){
+  const dot = document.getElementById('keyDot');
+  const txt = document.getElementById('keyStatusText');
+  const has = document.getElementById('apiKeyInput').value.trim().length > 0;
+  dot.classList.toggle('set', has);
+  txt.textContent = has ? 'Key set for this session only' : 'No key set — using automatic Claude.ai authentication';
+}
+document.getElementById('apiKeyInput')?.addEventListener('input', updateKeyStatus);
+
+function renderResGrid(schemes) {
+  const grid = document.getElementById('resGrid');
+  if(!schemes.length){grid.innerHTML='<p style="color:var(--ink-faint);grid-column:1/-1">No resources found for this filter.</p>';return;}
+  grid.innerHTML = schemes.map(s => {
+    const cc = catColors[s.cat]||catColors.general;
+    const urgColor = s.urgency==='High'?'var(--terracotta)':s.urgency==='Medium'?'#8A5A17':'var(--teal-soft)';
+    return `<div class="res-card">
+      <div class="res-card-head">
+        <div class="res-title">${s.title}</div>
+        <span class="res-cat ${cc.cls}">${cc.label}</span>
+      </div>
+      <div class="res-desc">${s.desc}</div>
+      <div style="font-size:0.78rem;color:var(--ink-faint);margin-bottom:6px">Eligibility: <span style="color:var(--ink-soft)">${s.eligibility}</span></div>
+      <div class="res-meta">
+        ${s.docs.map(d=>`<span class="res-tag">📄 ${d}</span>`).join('')}
+        <span style="color:${urgColor};font-size:0.75rem;font-weight:700;padding:3px 9px;border-radius:12px;background:${urgColor}1a">● ${s.urgency} urgency</span>
+      </div>
+      <div style="font-size:0.8rem;color:var(--ink-soft);margin-bottom:10px">📞 ${s.contact}</div>
+      <div class="res-actions">
+        <button class="res-btn">View details</button>
+        <button class="res-btn primary">Apply now</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterResources() {
+  const st = document.getElementById('filterState').value;
+  const cat = document.getElementById('filterCat').value.toLowerCase();
+  const urg = document.getElementById('filterUrgency').value;
+  let filtered = allSchemes.filter(s => {
+    if(st && s.state !== 'All India' && s.state !== st) return false;
+    if(cat && s.cat !== cat && s.cat !== (cat==='employment'?'employ':cat)) return false;
+    if(urg && s.urgency !== urg) return false;
+    return true;
+  });
+  renderResGrid(filtered);
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if(b.textContent.toLowerCase().includes(id.replace('-','').substring(0,4))) b.classList.add('active');
+  });
+  if(id==='resources') renderResGrid(allSchemes);
+}
+
+function startCrisis(type) {
+  const prompts = {
+    food:"I don't have enough food for my family and we are struggling",
+    housing:"We need urgent housing assistance after losing our home",
+    health:"My family member needs urgent medical treatment and we cannot afford it",
+    women:"I need help with women's safety and protection",
+    child:"I need help for child protection and nutrition",
+    employment:"I lost my job and need employment assistance",
+    legal:"I need free legal aid for my case",
+    disaster:"Our area was affected by floods and we need disaster relief",
+    mental:"I am going through a mental health crisis and need support"
+  };
+  showPage('chat');
+  document.getElementById('chatInput').value = prompts[type]||'I need help';
+  setTimeout(sendMessage, 300);
+}
+
+function usePrompt(el) {
+  document.getElementById('chatInput').value = el.textContent;
+  document.getElementById('chatInput').focus();
+}
+
+function handleKey(e) {
+  if(e.key==='Enter' && !e.shiftKey){e.preventDefault();sendMessage();}
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  const lang = document.getElementById('langSelect').value;
+  input.value = '';
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+
+  addMsg('user', `<div class="msg-bubble">${escHtml(msg)}</div>`);
+
+  const thinkDiv = addMsg('assistant','<div class="msg-bubble"><div class="typing-ind"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="thinking-msg">Analyzing crisis and finding resources...</div></div>');
+  scrollDown();
+
+  const systemPrompt = `You are Pulse, an AI-powered crisis resource finder for India. Analyze the user's crisis and respond ONLY with a valid JSON object (no markdown, no backticks, no extra text) in this exact format:
+{
+  "crisisType": "string (e.g. Health Emergency, Food Crisis, Employment Loss, Housing Crisis, Women Safety, Legal Aid, Disaster Relief, Mental Health)",
+  "urgency": "High|Medium|Low",
+  "summary": "2-3 sentence empathetic response in ${lang} acknowledging the situation and promising help",
+  "schemes": ["scheme name 1", "scheme name 2", "scheme name 3"],
+  "documents": ["doc1", "doc2", "doc3"],
+  "resources": [{"name": "resource name", "type": "type", "distance": "approx distance"}],
+  "contacts": [{"name": "helpline name", "number": "number"}],
+  "actionPlan": ["step 1", "step 2", "step 3", "step 4"]
+}
+
+Use India-specific government schemes (PMJAY, MGNREGS, PM Awas Yojana, etc.), real helpline numbers (100, 108, 181, 1098, etc.), and practical steps. Be specific and actionable. Respond in ${lang}.`;
+
+  try {
+    const headers = {"Content-Type":"application/json"};
+    if(sessionApiKey){
+      headers["x-api-key"] = sessionApiKey;
+      headers["anthropic-version"] = "2023-06-01";
+      headers["anthropic-dangerous-direct-browser-access"] = "true";
+    }
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers,
+      body: JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens:1000,
+        system: systemPrompt,
+        messages:[{role:"user",content:msg}]
+      })
+    });
+    const data = await resp.json();
+    const raw = data.content?.map(b=>b.text||'').join('').trim();
+    let result;
+    try {
+      const cleaned = raw.replace(/```json|```/g,'').trim();
+      result = JSON.parse(cleaned);
+    } catch {
+      result = {
+        crisisType:"General Crisis",urgency:"Medium",
+        summary:"I understand you're going through a difficult situation. Let me help you find the right resources and support.",
+        schemes:["PM Jan Dhan Yojana","Ayushman Bharat","MGNREGS"],
+        documents:["Aadhaar Card","Income Certificate","Ration Card"],
+        resources:[{name:"District Collector Office",type:"Government",distance:"Nearby"},{name:"Local NGO",type:"NGO",distance:"Nearby"}],
+        contacts:[{name:"Helpline",number:"1800-11-1555"}],
+        actionPlan:["Contact your local District Collector office","Gather identity documents","Apply for relevant government schemes","Reach out to local NGOs for immediate support"]
+      };
+    }
+    thinkDiv.remove();
+    addMsg('assistant', buildResponseCard(result));
+  } catch(err) {
+    thinkDiv.remove();
+    addMsg('assistant','<div class="msg-bubble"><div class="response-card"><p style="color:var(--ink-soft);font-size:0.88rem">Unable to reach the AI service right now. If you\'ve deployed this outside Claude.ai, check the API key in Settings (⚙️). Emergency numbers: Police 112 | Ambulance 108 | Women 181</p></div></div>');
+  }
+  btn.disabled = false;
+  scrollDown();
+}
+
+function buildResponseCard(r) {
+  const cc = catColors[r.crisisType?.toLowerCase().split(' ')[0]]||catColors.general;
+  const urgClass = r.urgency==='High'?'urgency-high':r.urgency==='Medium'?'urgency-medium':'urgency-low';
+  return `<div class="msg-bubble">
+  <div class="response-card">
+    <div class="rc-header">
+      <span class="rc-badge ${cc.cls}">${getCrisisEmoji(r.crisisType)} ${r.crisisType}</span>
+      <span class="${urgClass}">⚡ ${r.urgency} urgency</span>
+    </div>
+    ${r.summary?`<div class="rc-summary">${escHtml(r.summary)}</div>`:''}
+    <div class="rc-sections">
+      <div class="rc-section">
+        <h4>Eligible schemes</h4>
+        <ul>${(r.schemes||[]).map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul>
+      </div>
+      <div class="rc-section">
+        <h4>Documents required</h4>
+        <ul>${(r.documents||[]).map(d=>`<li>${escHtml(d)}</li>`).join('')}</ul>
+      </div>
+      <div class="rc-section">
+        <h4>Nearby support</h4>
+        <ul>${(r.resources||[]).map(res=>`<li>${escHtml(res.name)} (${escHtml(res.distance||'')})</li>`).join('')}</ul>
+      </div>
+      <div class="rc-section">
+        <h4>Helpline contacts</h4>
+        <div class="rc-contacts">${(r.contacts||[]).map(c=>`<span class="contact-pill">📞 ${escHtml(c.name)}: <strong>${escHtml(c.number)}</strong></span>`).join('')}</div>
+      </div>
+      <div class="rc-section full">
+        <h4>Your action plan</h4>
+        <ol class="action-steps">${(r.actionPlan||[]).map((step,i)=>`<li class="action-step"><span class="step-circle">${i+1}</span><span>${escHtml(step)}</span></li>`).join('')}</ol>
+      </div>
+    </div>
+  </div></div>`;
+}
+
+function getCrisisEmoji(type) {
+  if(!type) return '🆘';
+  const t = type.toLowerCase();
+  if(t.includes('health')||t.includes('medical')) return '🏥';
+  if(t.includes('food')||t.includes('hunger')) return '🍱';
+  if(t.includes('employ')||t.includes('job')) return '💼';
+  if(t.includes('housing')||t.includes('home')) return '🏠';
+  if(t.includes('women')||t.includes('domestic')) return '👩';
+  if(t.includes('legal')) return '⚖️';
+  if(t.includes('disaster')||t.includes('flood')) return '🌊';
+  if(t.includes('mental')) return '🧠';
+  if(t.includes('child')) return '👶';
+  return '🆘';
+}
+
+function addMsg(role, html) {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = html;
+  msgs.appendChild(div);
+  scrollDown();
+  return div;
+}
+
+function scrollDown() {
+  const msgs = document.getElementById('chatMessages');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function escHtml(s) {
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function adminLogin() {
+  document.getElementById('adminLogin').style.display = 'none';
+  document.getElementById('adminDash').style.display = 'block';
+}
+
+renderResGrid(allSchemes);
+</script>
+</body>
+</html>
